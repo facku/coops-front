@@ -271,6 +271,20 @@
                    </b-table>
                 </b-field>
               </b-tab-item>
+              <b-tab-item label="Autoridades">
+                <b-field label="Presidente">
+                   <b-input v-model="details.autoridades.presidente"></b-input>
+                </b-field>
+                <b-field label="Tesorero">
+                   <b-input v-model="details.autoridades.tesorero"></b-input>
+                </b-field>
+                <b-field label="Acompaña">
+                   <b-input v-model="details.autoridades.acompana"></b-input>
+                </b-field>
+                <b-field>
+                   <b-button type="is-primary" icon-pack="fa" icon-right="save" @click="updateAutoridades(details.autoridades.id)"></b-button>
+                </b-field>
+              </b-tab-item>
             </b-tabs>
           </div>
         </div>
@@ -398,6 +412,19 @@ export default {
     }
   },
   methods:{
+    updateAutoridades(idCoop){
+      var auts = {
+        'id_coop'   : idCoop,
+        'presidente': this.details.autoridades.presidente ||'',
+        'tesorero'  : this.details.autoridades.tesorero ||'',
+        'acompana'  : this.details.autoridades.acompana ||''
+      }
+      this.$http({
+        method:'put',
+        url:'/autoridades/'+this.details.autoridades.id,
+        data:{...auts}
+      })
+    },
     loadEjercicio(){
       this.$http.get('/ejercicios').then(resp => {
         this.cooperativas = resp.data
