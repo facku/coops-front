@@ -239,22 +239,13 @@
                 </b-field>
               </b-tab-item>
               <b-tab-item label="Tareas">
-                <b-field label="Tareas">
-                  <b-table class="stext" narrowed :data="details.tareas" :columns="[
-                  {
-                    field:'tareas',
-                    label:'Tareas'
-                  },
-                  {
-                    field:'destino_original',
-                    label:'Dest. Orig.',
-                  },
-                  {
-                    field:'destino_nuevo',
-                    label:'Dest. Nuevo'
-                  }
-                  ]"></b-table>
+                <b-field label="Destino">
+                  <b-input v-model="details.tareas.destino_nuevo"></b-input>
                 </b-field>
+                <b-field label="Tareas">
+                  <b-input v-model="details.tareas.tareas"></b-input>
+                </b-field>
+                <b-button @click="updateTareas(details.tareas.id)" type="is-medium is-success" icon-pack="fa" icon-left="save"></b-button>
               </b-tab-item>
               <b-tab-item label="Historial">
                 <b-field label="Ejercicios Anteriores">
@@ -412,9 +403,21 @@ export default {
     }
   },
   methods:{
-    updateAutoridades(idCoop){
+    updateTareas(idTarea){
+      var t = {
+        'destino_nuevo':this.details.tareas.destino_nuevo || '',
+        'tareas':this.details.tareas.tareas || ''
+      }
+      this.$http.put('/tareas/'+idTarea,{ ...t}).then(resp=>{
+        this.$toast.open({
+            message:`Tareas Actualizadas!`,
+            type:'is-success',
+            position:'is-bottom'
+        })
+      })
+    },
+    updateAutoridades(id){
       var auts = {
-        'id_coop'   : idCoop,
         'presidente': this.details.autoridades.presidente ||'',
         'tesorero'  : this.details.autoridades.tesorero ||'',
         'acompana'  : this.details.autoridades.acompana ||''
@@ -423,6 +426,12 @@ export default {
         method:'put',
         url:'/autoridades/'+this.details.autoridades.id,
         data:{...auts}
+      }).then(resp => {
+         this.$toast.open({
+            message:`Autoridades Actualziadas!`,
+            type:'is-info',
+            position:'is-bottom'
+        })
       })
     },
     loadEjercicio(){
@@ -513,8 +522,8 @@ export default {
           coop:this.selected.nombre,
           expte:this.selected.expte,
           beneficiarios:this.details.socios.filter(x=> x.estado=='1').length,
-          pte:this.details.autoridades[0].presidente,
-          acompana:this.details.autoridades[0].acompana,
+          pte:this.details.autoridades.presidente,
+          acompana:this.details.autoridades.acompana,
         }
       }).then(resp => {
         const url = window.URL.createObjectURL(new Blob([resp.data]));

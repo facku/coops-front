@@ -10,7 +10,7 @@ Vue.use(Buefy)
 
 Vue.config.productionTip = false
 Vue.prototype.$http = axios
-Vue.prototype.$http.defaults.baseURL = 'http://localhost/'
+Vue.prototype.$http.defaults.baseURL = 'http://10.8.106.27/api/'
 
 
 new Vue({
