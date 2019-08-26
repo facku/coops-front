@@ -119,16 +119,16 @@
 
                 <div class="box level">
                   <div class="level-item">
-                    <b-switch type="is-success" size="is-small" false-value="0" true-value="1" v-model="selected.planilla_asistencia">Asistencia</b-switch>
+                    <b-switch type="is-success" :disabled="loading" size="is-small" false-value="0" true-value="1" @input="switchCoopChange()" v-model="selected.planilla_asistencia">Asistencia</b-switch>
                   </div>
                   <div class="level-item">
-                    <b-switch type="is-success" size="is-small" false-value="0" true-value="1" v-model="selected.sintys">Sintys</b-switch>
+                    <b-switch type="is-success" :disabled="loading" size="is-small" false-value="0" true-value="1" @input="switchCoopChange()" v-model="selected.sintys">Sintys</b-switch>
                   </div>
                   <div class="level-item">
-                    <b-switch type="is-success" size="is-small" false-value="0" true-value="1" v-model="selected.resolucion">Resolución</b-switch>
+                    <b-switch type="is-success" :disabled="loading" size="is-small" false-value="0" true-value="1" @input="switchCoopChange()" v-model="selected.resolucion">Resolución</b-switch>
                   </div>
                   <div class="level-item">
-                    <b-switch type="is-success" size="is-small" false-value="0" true-value="1" v-model="selected.anexo">Anexo</b-switch>
+                    <b-switch type="is-success" :disabled="loading" size="is-small" false-value="0" true-value="1" @input="switchCoopChange()" v-model="selected.anexo">Anexo</b-switch>
                   </div>
 
                 </div>
@@ -366,14 +366,10 @@
             <b-field label="Nombre Completo" style="margin-top:-2em;">
                 <b-input maxlength="120" v-model="socio.nombre"></b-input>
             </b-field>
-            
-            <b-field label="Observaciones" style="margin-top:-1em;">
-                <b-input type="textarea" rows="8" maxlength="300" v-model="socio.observaciones"></b-input>
-            </b-field>
         </div>
         <div class="card-footer">
           <a class="card-footer-item" @click="isModalAddSocioActive=false">Cancelar</a>
-          <a class="card-footer-item" @click="addSocio()">Guardar</a>
+          <b-button class="card-footer-item" v-if="socio.cuit.length==11 && socio.nombre.length>5" @click="addSocio()">Guardar</b-button>
         </div>
     </div>
   </b-modal>
@@ -412,9 +408,9 @@ export default {
         })
         this.selected = this.cooperativas[0]; this.tabActive = this.tabActive || 0
         //para debug, borrar luego
-        this.currentPage = 2
-        this.selected = this.cooperativas[18];
-        this.tabActive = 3;
+        //this.currentPage = 2
+        //this.selected = this.cooperativas[18];
+        //this.tabActive = 3;
       })
     },
     editSocio(index){
@@ -431,7 +427,26 @@ export default {
       this.isModalAddSocioActive = true
     },
     addSocio(){
-      alert()
+      this.$http({
+        method:'post',
+        url:'/socios/',
+        data:{
+          id_coop:this.details.id,
+          nombre:this.socio.nombre,
+          cuit:this.socio.cuit,
+          observaciones:this.socio.observaciones,
+          periodo:this.selected.periodo
+        }
+      }).then(resp=>{
+        this.socio = {id:'',nombre:'',cuit:'',observaciones:''}
+        this.isModalAddSocioActive = false
+        this.loadCoop()
+        this.$toast.open({
+            message:`Socio Creado!`,
+            type:'is-success',
+            position:'is-bottom'
+        })
+      })
     },
     changeSwitch(index){
       this.loading = true
@@ -449,6 +464,18 @@ export default {
           this.loading = false
         })
         
+    },
+    //Metodo que se llama cuando se cambio un Sitch global de la cooperativa
+    switchCoopChange(a,b){
+      this.loading = true
+      this.$http({
+        method:'put',
+        url:'/ejercicios/coop',
+        data:{...this.selected}
+      }).then(resp => {
+        console.log(resp.data)
+        this.loading = false
+      })
     },
     downloadReso(){
       this.$http({

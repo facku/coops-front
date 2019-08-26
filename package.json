@@ -1,6 +1,10 @@
 {
   "name": "coops-front",
-  "version": "0.7.0",
+  "version": "0.7.1",
+  "author": {
+    "name": "López Facundo",
+    "email": "facku@gmail.com"
+  },
   "private": true,
   "scripts": {
     "serve": "vue-cli-service serve",
