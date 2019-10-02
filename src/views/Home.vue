@@ -84,7 +84,7 @@
             <b-tabs v-model="tabActive">
               <b-tab-item label="Cooperativa">
                 <div class="columns">
-                  <div class="column is-6">
+                  <div class="column is-5">
                   <b-field label="Nombre">
                     <b-input v-model="details.nombre"></b-input>
                   </b-field>
@@ -94,9 +94,16 @@
                       <b-input class="has-center" v-model="details.expte"></b-input>
                     </b-field>
                   </div>
-                  <div class="column is-4">
+                  <div class="column is-3">
                     <b-field label="Localiad">
                       <b-input v-model="details.localidad"></b-input>
+                    </b-field>
+                  </div>
+                  <div class="column is-2">
+                    <b-field label=" ">
+                      <b-tooltip label="Guardar" type="is-dark">
+                        <b-button type="is-primary is-outlined" size="is-large" icon-pack="fa" icon-left="save" @click="updateCoop()"></b-button>
+                      </b-tooltip>
                     </b-field>
                   </div>
                 </div>
@@ -137,15 +144,37 @@
                 </b-field>
               </b-tab-item>
               <b-tab-item label="Socios">
-                <div class="has-text-right">
-                  <b-button type="is-success is-small" icon-pack="fa" icon-left="user-plus" @click="addSocioClick()">Nuevo Socio</b-button>
+                <div class="level">
+                  <div class="level-item pad6">
+                    <b-button type="is-primary is-small" icon-pack="fa" icon-left="user-check" icon-right="check-square" @click="asistenciaGlobal()">Asistencia: Todos</b-button>
+                    <b-button type="is-primary is-small" icon-pack="fa" icon-right="square" @click="asistenciaGlobalNot()">Ninguno</b-button>
+                  </div>
+                  <div class="level-item pad6">
+                    <b-button type="is-info is-small" icon-pack="fa" icon-left="address-card" icon-right="check-square" @click="sintysGlobal()">Sintys: Todos</b-button>
+                    <b-button type="is-info is-small" icon-pack="fa" icon-right="square" @click="sintysGlobalNot()">Ninguno</b-button>
+                  </div>
+                  <div class="level-item">
+                    <b-button type="is-success is-small" icon-pack="fa" icon-left="user-plus" @click="addSocioClick()">Nuevo Socio</b-button>
+                  </div>
                 </div>
                 <b-field :label="'Socios ('+details.socios.length+')'">
                   <b-table hoverable narrowed :data="details.socios" :loading="loading">
                     <template slot-scope="props">
                       <b-table-column width="100"  centered field="cuit" label="CUIT" class="stext">{{props.row.cuit}}</b-table-column>
 
-                      <b-table-column width="250" field="nombre" label="Nombre Completo" class="stext">{{props.row.nombre}}</b-table-column>
+                      <b-table-column width="250" field="nombre" label="Nombre Completo" class="stext">
+                        {{props.row.nombre}}
+                        <b-tooltip
+                          v-if="props.row.observaciones!='' && props.row.observaciones!=NULL"
+                          :label="props.row.observaciones" style="cursor:pointer;" type="is-dark"
+                        >
+                          <b-icon
+                            icon-pack="fa"                      
+                            icon="information"
+                            type="is-primary"
+                          ></b-icon>
+                        </b-tooltip>
+                      </b-table-column>
 
                       <b-table-column width="40" label="Asist" centered>
                         <b-switch size="is-small" @change.native="changeSwitch(props.index)"
@@ -155,11 +184,6 @@
                       </b-table-column>
 
                       <b-table-column width="40" label="Sintys" centered field="sintys">
-                        <!--<b-switch size="is-small" @change.native="changeSwitch(props.index)"
-                          v-model="details.socios[props.index].sintys" 
-                          true-value="1" false-value="0" type="is-success"
-                        ></b-switch> -->
-
                         <b-dropdown v-model="details.socios[props.index].sintys" aria-role="list" @input="changeSwitch(props.index)">
                           <b-button slot="trigger" :type="{'is-small':true,'is-success':details.socios[props.index].sintys=='1', 'is-danger':details.socios[props.index].sintys=='2'}">
 
@@ -403,6 +427,49 @@ export default {
     }
   },
   methods:{
+    asistenciaGlobal(){
+      this.loading = true
+      this.$http.get('/socios/asistenciaAll/'+this.selected.id).then(resp=>{
+        this.loading = false
+        this.loadCoop();
+      })
+    },
+    asistenciaGlobalNot(){
+      this.loading = true
+      this.$http.get('/socios/asistenciaAllNot/'+this.selected.id).then(resp=>{
+        this.loading = false
+        this.loadCoop();
+      })
+    },
+    sintysGlobal(){
+      this.loading = true
+      this.$http.get('/socios/sintysAll/'+this.selected.id).then(resp=>{
+        this.loading = false
+        this.loadCoop();
+      })
+    },
+    sintysGlobalNot(){
+      this.loading = true
+      this.$http.get('/socios/sintysAllNot/'+this.selected.id).then(resp=>{
+        this.loading = false
+        this.loadCoop();
+      })
+    },
+    updateCoop(){
+      var temp = {
+        nombre: this.details.nombre,
+        expte: this.details.expte,
+        localidad: this.details.localidad,
+        observacion: this.details.observacion
+      }
+      this.$http.put('/coops/'+this.details.id, {...temp}).then(r => {
+        this.$toast.open({
+            message:`Cooperativa Actualizada!`,
+            type:'is-success',
+            position:'is-bottom'
+        })
+      })
+    },
     updateTareas(idTarea){
       var t = {
         'destino_nuevo':this.details.tareas.destino_nuevo || '',
@@ -442,11 +509,8 @@ export default {
             type:'is-info',
             position:'is-bottom'
         })
-        this.selected = this.cooperativas[0]; this.tabActive = this.tabActive || 0
-        //para debug, borrar luego
-        //this.currentPage = 2
-        //this.selected = this.cooperativas[18];
-        //this.tabActive = 3;
+        //this.selected = this.cooperativas[0]; this.tabActive = this.tabActive || 0
+        
       })
     },
     editSocio(index){
@@ -486,6 +550,16 @@ export default {
     },
     changeSwitch(index){
       this.loading = true
+      //si tiene asistencia y el sintys esta ok pongo como Estado true
+      if(this.details.socios[index].asistencia==1 && this.details.socios[index].sintys==1){
+        this.details.socios[index].estado = 1
+      }else{
+        if(this.details.socios[index].asistencia==1 && this.details.socios[index].afip==1 && this.details.socios[index].anses==1){
+          this.details.socios[index].estado = 1
+        }else{
+          this.details.socios[index].estado = 0
+        }
+      }
       this.$http({
         method:'put',
         url:'/ejercicios/'+this.details.socios[index].id,
@@ -519,11 +593,16 @@ export default {
         url:'/resolucion/generar',
         responseType: 'blob',
         params:{
+          id:this.selected.id,
           coop:this.selected.nombre,
           expte:this.selected.expte,
           beneficiarios:this.details.socios.filter(x=> x.estado=='1').length,
           pte:this.details.autoridades.presidente,
           acompana:this.details.autoridades.acompana,
+          localidad:this.details.localidad,
+          mes:this.meses[this.details.periodo-1],
+          tareas:this.details.tareas.tareas,
+          tareas_lugar:this.details.tareas.destino_nuevo
         }
       }).then(resp => {
         const url = window.URL.createObjectURL(new Blob([resp.data]));
@@ -570,7 +649,8 @@ export default {
           periodo:this.selected.periodo
         }
       }).then(resp => {
-        this.loadEjercicio()
+        //this.loadEjercicio()
+        this.loadCoop()
         this.isModalUpdateSocioActive = false
         this.$toast.open({
             message:`Socio Actualizado!`,

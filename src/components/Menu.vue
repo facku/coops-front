@@ -47,12 +47,8 @@
           </a>
 
           <div class="navbar-dropdown">
-              <a class="navbar-item">
-              About
-              </a>
-              <hr class="navbar-divider">
               <a class="navbar-item" @click="logOut">
-              Salir
+              <i class="fa fa-sign-out"></i> Salir
               </a>
           </div>
         </div>
